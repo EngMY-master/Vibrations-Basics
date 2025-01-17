@@ -1,0 +1,103 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def viscous_damped_vibration():
+    print("Viscous Damped Free Vibration Solver")
+
+    # User inputs
+    m = float(input("Enter the mass of the system (kg): "))
+    k = float(input("Enter the stiffness of the spring (N/m): "))
+    c = float(input("Enter the damping coefficient (N*s/m): "))
+    x0 = float(input("Enter the initial displacement (m): "))
+    v0 = float(input("Enter the initial velocity (m/s): "))
+    duration = float(input("Enter the duration of simulation (s): "))
+    num_points = int(input("Enter the number of points for the simulation: "))
+
+    # Natural frequency and critical damping coefficient
+    omega_n = np.sqrt(k / m)
+    c_critical = 2 * m * omega_n
+    print(f"\nNatural Frequency (rad/s): {omega_n:.2f}")
+    print(f"Critical Damping Coefficient: {c_critical:.2f} N*s/m")
+
+    # Damping ratio
+    damping_ratio = c / c_critical
+
+    # Time array
+    t = np.linspace(0, duration, num_points)
+
+    if damping_ratio > 1:
+        # Overdamped system
+        print("System is overdamped.")
+        lambda1 = (-c / (2 * m)) + np.sqrt((c / (2 * m))**2 - omega_n**2)
+        lambda2 = (-c / (2 * m)) - np.sqrt((c / (2 * m))**2 - omega_n**2)
+        A = (v0 - lambda2 * x0) / (lambda1 - lambda2)
+        B = x0 - A
+        x_t = A * np.exp(lambda1 * t) + B * np.exp(lambda2 * t)
+        v_t = A * lambda1 * np.exp(lambda1 * t) + B * lambda2 * np.exp(lambda2 * t)
+        a_t = A * lambda1**2 * np.exp(lambda1 * t) + B * lambda2**2 * np.exp(lambda2 * t)
+        pos_eqn = f"x(t) = {A:.2f}e^({lambda1:.2f}t) + {B:.2f}e^({lambda2:.2f}t)"
+        vel_eqn = f"v(t) = {A * lambda1:.2f}e^({lambda1:.2f}t) + {B * lambda2:.2f}e^({lambda2:.2f}t)"
+        acc_eqn = f"a(t) = {A * lambda1**2:.2f}e^({lambda1:.2f}t) + {B * lambda2**2:.2f}e^({lambda2:.2f}t)"
+
+    elif np.isclose(damping_ratio, 1):
+        # Critically damped system
+        print("System is critically damped.")
+        lambda_c = -omega_n
+        A = x0
+        B = v0 + omega_n * x0
+        x_t = (A + B * t) * np.exp(lambda_c * t)
+        v_t = (B + A * lambda_c + B * lambda_c * t) * np.exp(lambda_c * t)
+        a_t = (2 * B * lambda_c + A * lambda_c**2 + B * lambda_c**2 * t) * np.exp(lambda_c * t)
+        pos_eqn = f"x(t) = ({A:.2f} + {B:.2f}t)e^({lambda_c:.2f}t)"
+        vel_eqn = f"v(t) = ({B:.2f} + {A * lambda_c:.2f} + {B * lambda_c:.2f}t)e^({lambda_c:.2f}t)"
+        acc_eqn = f"a(t) = ({2 * B * lambda_c:.2f} + {A * lambda_c**2:.2f} + {B * lambda_c**2:.2f}t)e^({lambda_c:.2f}t)"
+
+    else:
+        # Underdamped system
+        print("System is underdamped.")
+        omega_d = omega_n * np.sqrt(1 - damping_ratio**2)
+        D = np.sqrt(x0**2 + ((v0 + damping_ratio * omega_n * x0) / omega_d)**2)
+        phi = np.arctan((omega_d * x0) / (v0 + damping_ratio * omega_n * x0))
+        x_t = D * np.exp(-damping_ratio * omega_n * t) * np.sin(omega_d * t + phi)
+        v_t = D * np.exp(-damping_ratio * omega_n * t) * (
+            omega_d * np.cos(omega_d * t + phi) - damping_ratio * omega_n * np.sin(omega_d * t + phi)
+        )
+        a_t = D * np.exp(-damping_ratio * omega_n * t) * (
+            -omega_d**2 * np.sin(omega_d * t + phi)
+            - 2 * damping_ratio * omega_n * omega_d * np.cos(omega_d * t + phi)
+            + damping_ratio**2 * omega_n**2 * np.sin(omega_d * t + phi)
+        )
+        pos_eqn = f"x(t) = {D:.2f}e^(-{damping_ratio * omega_n:.2f}t)sin({omega_d:.2f}t + {phi:.2f})"
+        vel_eqn = f"v(t) = Derived from x(t)"
+        acc_eqn = f"a(t) = Derived from v(t)"
+
+    # Plot results
+    fig, axs = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
+
+    # Plot position vs time
+    axs[0].plot(t, x_t, label=pos_eqn, color="blue")
+    axs[0].set_title("Position vs Time")
+    axs[0].set_ylabel("Position (m)")
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # Plot velocity vs time
+    axs[1].plot(t, v_t, label=vel_eqn, color="green")
+    axs[1].set_title("Velocity vs Time")
+    axs[1].set_ylabel("Velocity (m/s)")
+    axs[1].legend()
+    axs[1].grid(True)
+
+    # Plot acceleration vs time
+    axs[2].plot(t, a_t, label=acc_eqn, color="red")
+    axs[2].set_title("Acceleration vs Time")
+    axs[2].set_xlabel("Time (s)")
+    axs[2].set_ylabel("Acceleration (m/s^2)")
+    axs[2].legend()
+    axs[2].grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
+# Run the program
+viscous_damped_vibration()
