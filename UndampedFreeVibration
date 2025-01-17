@@ -1,0 +1,61 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def undamped_free_vibration():
+    print("Undamped Free Vibration Solver")
+
+    # User inputs
+    m = float(input("Enter the mass of the system (kg): "))
+    k = float(input("Enter the stiffness of the spring (N/m): "))
+    x0 = float(input("Enter the initial displacement (m): "))
+    v0 = float(input("Enter the initial velocity (m/s): "))
+    duration = float(input("Enter the duration of simulation (s): "))
+    num_points = int(input("Enter the number of points for the simulation: "))
+
+    # Calculate natural frequency
+    omega_n = np.sqrt(k / m)
+    print(f"\nNatural Frequency (rad/s): {omega_n:.2f}")
+
+    # Time array
+    t = np.linspace(0, duration, num_points)
+
+    # Calculate constants C1 and C2
+    C1 = x0
+    C2 = v0 / omega_n
+
+    # Displacement, velocity, and acceleration for undamped free vibration
+    x_t = C1 * np.cos(omega_n * t) + C2 * np.sin(omega_n * t)
+    v_t = -C1 * omega_n * np.sin(omega_n * t) + C2 * omega_n * np.cos(omega_n * t)
+    a_t = -C1 * omega_n**2 * np.cos(omega_n * t) - C2 * omega_n**2 * np.sin(omega_n * t)
+
+    # Create a figure with 3 subplots
+    fig, axs = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
+
+    # Plot position vs time
+    axs[0].plot(t, x_t, label=f"x(t) = {C1:.2f}cos({omega_n:.2f}t) + {C2:.2f}sin({omega_n:.2f}t)", color="blue")
+    axs[0].set_title("Position vs Time")
+    axs[0].set_ylabel("Position (m)")
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # Plot velocity vs time
+    axs[1].plot(t, v_t, label=f"v(t) = {-C1 * omega_n:.2f}sin({omega_n:.2f}t) + {C2 * omega_n:.2f}cos({omega_n:.2f}t)", color="green")
+    axs[1].set_title("Velocity vs Time")
+    axs[1].set_ylabel("Velocity (m/s)")
+    axs[1].legend()
+    axs[1].grid(True)
+
+    # Plot acceleration vs time
+    axs[2].plot(t, a_t, label=f"a(t) = {-C1 * omega_n**2:.2f}cos({omega_n:.2f}t) - {C2 * omega_n**2:.2f}sin({omega_n:.2f}t)", color="red")
+    axs[2].set_title("Acceleration vs Time")
+    axs[2].set_xlabel("Time (s)")
+    axs[2].set_ylabel("Acceleration (m/s^2)")
+    axs[2].legend()
+    axs[2].grid(True)
+
+    # Show the plots
+    plt.tight_layout()
+    plt.show()
+
+# Run the program
+undamped_free_vibration()
