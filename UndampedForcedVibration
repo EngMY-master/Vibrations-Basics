@@ -1,0 +1,122 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def undamped_forced_vibration():
+    print("Undamped Forced Vibration Solver")
+
+    # User inputs
+    m = float(input("Enter the mass of the system (kg): "))
+    k = float(input("Enter the stiffness of the spring (N/m): "))
+    duration = float(input("Enter the duration of simulation (s): "))
+    num_points = int(input("Enter the number of points for the simulation: "))
+
+    force_func = input("Enter the force as a function of time (e.g., '10*np.sin(5*t)'): ")
+
+    # Natural frequency and resonant frequency
+    omega_n = np.sqrt(k / m)
+    print(f"\nNatural Frequency (rad/s): {omega_n:.2f}")
+
+    # Time array
+    t = np.linspace(0, duration, num_points)
+
+    # Evaluate force function
+    try:
+        f_t = eval(force_func, {"t": t, "np": np})
+    except Exception as e:
+        print(f"Error in evaluating the force function: {e}")
+        return
+
+    # Forcing frequency (if applicable)
+    if "sin" in force_func or "cos" in force_func:
+        forcing_frequency = float(input("Enter the forcing frequency (rad/s): "))
+        if np.isclose(forcing_frequency, omega_n):
+            print("The system is at resonance! The displacement grows indefinitely.")
+            # Unbounded response at resonance
+            F0 = np.max(f_t)  # Amplitude of the force
+            X = F0 / (2 * m * omega_n)  # Coefficient for resonance growth
+            x_t = X * t * np.sin(forcing_frequency * t)  # Linearly growing sine wave
+            v_t = X * (np.sin(forcing_frequency * t) + forcing_frequency * t * np.cos(forcing_frequency * t))
+            a_t = X * (2 * forcing_frequency * np.cos(forcing_frequency * t) - forcing_frequency**2 * t * np.sin(forcing_frequency * t))
+
+            # Plot resonance response
+            fig, axs = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
+
+            # Plot position vs time
+            axs[0].plot(t, x_t, label="Position x(t) - Resonance", color="blue")
+            axs[0].set_title("Position vs Time at Resonance")
+            axs[0].set_ylabel("Position (m)")
+            axs[0].legend()
+            axs[0].grid(True)
+
+            # Plot velocity vs time
+            axs[1].plot(t, v_t, label="Velocity v(t) - Resonance", color="green")
+            axs[1].set_title("Velocity vs Time at Resonance")
+            axs[1].set_ylabel("Velocity (m/s)")
+            axs[1].legend()
+            axs[1].grid(True)
+
+            # Plot acceleration vs time
+            axs[2].plot(t, a_t, label="Acceleration a(t) - Resonance", color="red")
+            axs[2].set_title("Acceleration vs Time at Resonance")
+            axs[2].set_xlabel("Time (s)")
+            axs[2].set_ylabel("Acceleration (m/s^2)")
+            axs[2].legend()
+            axs[2].grid(True)
+
+            plt.tight_layout()
+            plt.show()
+            return
+
+        denominator = k - m * forcing_frequency**2
+        X = np.max(f_t) / denominator  # Steady-state amplitude
+        x_t = X * np.sin(forcing_frequency * t)
+        v_t = X * forcing_frequency * np.cos(forcing_frequency * t)
+        a_t = -X * forcing_frequency**2 * np.sin(forcing_frequency * t)
+    else:
+        x_t = f_t / k
+        v_t = np.gradient(x_t, t[1] - t[0])
+        a_t = np.gradient(v_t, t[1] - t[0])
+
+    # Resonance detection
+    if "sin" in force_func or "cos" in force_func:
+        if forcing_frequency == omega_n:
+            print("\nThe system is resonating! The forcing frequency matches the natural frequency.")
+        else:
+            print(f"\nThe system is not resonating. The forcing frequency is {forcing_frequency:.2f} rad/s.")
+
+    # Display results
+    print("\nResults:")
+    print(f"Maximum Displacement: {np.max(np.abs(x_t)):.4f} m")
+    print(f"Maximum Velocity: {np.max(np.abs(v_t)):.4f} m/s")
+    print(f"Maximum Acceleration: {np.max(np.abs(a_t)):.4f} m/s^2")
+
+    # Plot results if not resonating
+    fig, axs = plt.subplots(3, 1, figsize=(10, 12), sharex=True)
+
+    # Plot position vs time
+    axs[0].plot(t, x_t, label="Position x(t)", color="blue")
+    axs[0].set_title("Position vs Time")
+    axs[0].set_ylabel("Position (m)")
+    axs[0].legend()
+    axs[0].grid(True)
+
+    # Plot velocity vs time
+    axs[1].plot(t, v_t, label="Velocity v(t)", color="green")
+    axs[1].set_title("Velocity vs Time")
+    axs[1].set_ylabel("Velocity (m/s)")
+    axs[1].legend()
+    axs[1].grid(True)
+
+    # Plot acceleration vs time
+    axs[2].plot(t, a_t, label="Acceleration a(t)", color="red")
+    axs[2].set_title("Acceleration vs Time")
+    axs[2].set_xlabel("Time (s)")
+    axs[2].set_ylabel("Acceleration (m/s^2)")
+    axs[2].legend()
+    axs[2].grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
+# Run the program
+undamped_forced_vibration()
